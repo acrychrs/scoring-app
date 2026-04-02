@@ -27,9 +27,24 @@ export default function AdminDashboard() {
     }
   }
 
+  // FUNGSI HAPUS EVENT
+  const deleteEvent = async (e: React.MouseEvent, id: string, name: string) => {
+    e.stopPropagation() // Biar gak ke-trigger navigasi ke detail event
+    
+    const confirmFirst = confirm(`Yakin mau hapus event "${name}"?`)
+    if (confirmFirst) {
+      const confirmSecond = confirm(`PERINGATAN: Semua data tim dan skor di dalam event ini akan HILANG PERMANEN. Lanjutkan?`)
+      if (confirmSecond) {
+        const { error } = await supabase.from('events').delete().eq('id', id)
+        if (error) alert("Gagal hapus: " + error.message)
+        else fetchEvents()
+      }
+    }
+  }
+
   if (loading) return (
-    <div className="h-screen flex items-center justify-center bg-white">
-      <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    <div className="h-screen flex items-center justify-center bg-white font-black text-indigo-600">
+      LOADING DASHBOARD...
     </div>
   )
 
@@ -47,13 +62,13 @@ export default function AdminDashboard() {
       </header>
 
       {/* CREATE EVENT CARD */}
-      <section className="glass p-8 rounded-[2.5rem] mb-16 shadow-2xl shadow-indigo-100 border border-white animate-fade-up">
-        <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-1">Create New Event</h2>
+      <section className="bg-white p-8 rounded-[2.5rem] mb-16 shadow-2xl shadow-indigo-100 border border-slate-100 animate-fade-up">
+        <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-1 italic">Create New Event</h2>
         <div className="flex flex-col gap-3">
           <input 
             type="text" 
             placeholder="Event Name (ex: Air Biru Bandung)" 
-            className="bg-slate-100 p-5 rounded-2xl outline-none focus:ring-4 ring-indigo-100 font-bold text-lg transition-all border-none"
+            className="bg-slate-50 p-5 rounded-2xl outline-none focus:ring-4 ring-indigo-50 font-bold text-lg transition-all border border-slate-100"
             value={newEvent}
             onChange={(e) => setNewEvent(e.target.value)}
           />
@@ -68,13 +83,13 @@ export default function AdminDashboard() {
 
       {/* LIST EVENTS */}
       <section className="space-y-4 animate-fade-up">
-        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 mb-4 italic">Your Active Events</h3>
+        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 mb-4 italic">Active Events</h3>
         
         {events.map((event) => (
           <div 
             key={event.id} 
             onClick={() => window.location.href = `/admin/${event.id}`}
-            className="group glass p-6 rounded-[2rem] flex justify-between items-center hover:border-indigo-500 transition-all cursor-pointer shadow-sm border border-transparent hover:shadow-xl active:scale-95"
+            className="group bg-white p-6 rounded-[2rem] flex justify-between items-center hover:border-indigo-500 transition-all cursor-pointer shadow-sm border border-slate-100 hover:shadow-xl active:scale-[0.98]"
           >
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Live Event</span>
@@ -83,34 +98,39 @@ export default function AdminDashboard() {
               </h4>
             </div>
 
-            {/* IKON PANAH (MENGGANTIKAN KOTAK KOSONG) */}
-            <div className="bg-indigo-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-[-45deg] transition-all duration-300">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="3" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="w-6 h-6"
+            <div className="flex items-center gap-3">
+              {/* TOMBOL HAPUS */}
+              <button 
+                onClick={(e) => deleteEvent(e, event.id, event.name)}
+                className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                title="Hapus Event"
               >
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
+              </button>
+
+              {/* IKON PANAH */}
+              <div className="bg-indigo-50 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                </svg>
+              </div>
             </div>
           </div>
         ))}
 
         {events.length === 0 && (
           <div className="text-center py-20 border-4 border-dashed border-slate-100 rounded-[3rem]">
-            <p className="text-slate-300 font-black uppercase tracking-widest text-sm">No Events Yet</p>
+            <p className="text-slate-300 font-black uppercase tracking-widest text-sm">No Events Found</p>
           </div>
         )}
       </section>
 
       <footer className="mt-24 text-center opacity-20 font-black text-[10px] tracking-[0.5em] uppercase">
-        Powering Your Competition
+        Admin Dashboard v1.1
       </footer>
     </div>
   )
